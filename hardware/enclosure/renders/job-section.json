@@ -1,0 +1,7 @@
+{
+  "input": "STEP/assembly.step",
+  "mode": "section",
+  "section": { "plane": "YZ", "offset": 0 },
+  "outputs": [ { "path": "renders/section-gpo.png" } ],
+  "output": { "sizeProfile": "diagnostic", "padding": 0.06 }
+}

@@ -1,0 +1,39 @@
+# Firmware dumps (5.6 GB, device-unique keys/MAC/SN). Revert path lives on disk only.
+/dump/
+
+# Secrets (device credentials, cloud keys, Google feed key, Framely exports)
+.secrets/
+**/keys.json
+*.pem
+*.key
+*.keystore.pass
+*.keystore
+.env
+.env.*
+
+# Python / tooling caches
+.venv/
+venv/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+
+# Agent / scratch output
+.pi/
+.shots/
+/kiosk/.shots/
+
+# Build intermediates (signed APK is kept)
+/kiosk/android/build/*
+!/kiosk/android/build/framely-kiosk.apk
+
+# OS
+.DS_Store
+
+# local build output (rebuild with android/build.sh)
+kiosk/android/build/
+!kiosk/android/build/.gitkeep
+
+# build/check output
+/hardware/enclosure/checks/out/
+/tools/log/

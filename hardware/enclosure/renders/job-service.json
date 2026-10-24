@@ -1,0 +1,9 @@
+{
+  "input": "STEP/service_pose.step",
+  "mode": "view",
+  "display": {"mode": "render", "camera": {"projection": "perspective", "focalLength": 45},
+              "lighting": {"quality": "final", "exposure": 0.15, "rotation": 30, "fill": 0.6},
+              "floor": {"enabled": false}, "background": {"color": "#E9E6E0"}},
+  "outputs": [{"path": "renders/service.png", "camera": {"direction": [0.8, -0.35, 0.7], "up": [0, 1, 0]}}],
+  "output": {"sizeProfile": "presentation", "padding": 0.05}
+}

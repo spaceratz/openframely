@@ -1,0 +1,5 @@
+# test + lint tooling (the integration itself has no extra runtime deps)
+pytest>=9.1.1
+icalendar>=7.3.0
+playwright>=1.63.0
+ruff>=0.17.0

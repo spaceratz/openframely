@@ -1,0 +1,6 @@
+{
+  "pythonVersion": "3.12",
+  "exclude": ["dump", ".venv", "**/.secrets", "**/__pycache__"],
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none"
+}

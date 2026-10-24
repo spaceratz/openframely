@@ -1,0 +1,13 @@
+{
+  "input": "STEP/assembly.step",
+  "mode": "view",
+  "display": {
+    "mode": "render",
+    "camera": { "projection": "perspective", "focalLength": 50 },
+    "lighting": { "quality": "final", "exposure": 0.25, "rotation": -30, "fill": 0.45 },
+    "floor": { "enabled": true, "placement": "lowest", "finish": "matte", "color": "#E4E0D8" },
+    "background": { "color": "#E4E0D8" }
+  },
+  "outputs": [ { "path": "renders/wallshot.png", "camera": { "direction": [0.35, -0.25, 1.0], "up": [0, 1, 0] } } ],
+  "output": { "sizeProfile": "presentation", "padding": 0.12 }
+}

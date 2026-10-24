@@ -1,0 +1,7 @@
+# Local install config (tracked: config.example.js). Copy to config.js per install.
+config.js
+# Real board serial / screenshots / exported secrets stay local:
+.secrets/
+.shots/
+.shots/
+.secrets/

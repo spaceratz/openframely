@@ -1,0 +1,11 @@
+{
+  "name": "openframely-kiosk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "TZ=Australia/Perth bun test tests/",
+    "e2e": "python3 -m pytest tests/test_e2e.py -q",
+    "shots": "python3 tools/shots.py",
+    "board": "bun tools/board.mjs"
+  }
+}

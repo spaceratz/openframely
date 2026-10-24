@@ -1,0 +1,57 @@
+name: Bug report
+description: >-
+  Something on the wall or in the Home Assistant integration isn't working
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please **remove any personal details**
+        (names, tokens, feed URLs, IPs, Wi-Fi names, serials) from logs
+        and screenshots before posting.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: >-
+        What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part?
+      options:
+        - Wall app (calendar, chores, home controls, settings)
+        - Home Assistant integration (family_kiosk)
+        - Kiosk APK (boot, Wi-Fi, brightness, sleep)
+        - Google Calendar feed (Apps Script)
+        - Install, adb or flashing steps
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Board model
+      description: Output of `adb shell getprop ro.product.model`
+      placeholder: BPSDC01
+  - type: input
+    id: ha
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.10.1"
+  - type: input
+    id: build
+    attributes:
+      label: Wall build
+      description: Shown at the bottom of Settings
+      placeholder: "App 3.0, web build 1791966119"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: >-
+        Home Assistant log lines for `family_kiosk`, or a photo of the wall.
+        Redact personal details first.
+      render: text

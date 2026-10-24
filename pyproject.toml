@@ -1,0 +1,13 @@
+[tool.pytest.ini_options]
+testpaths = ["ha-integration/tests", "kiosk/tests"]
+addopts = "-q"
+markers = ["clock: install the Playwright fake clock before the page loads"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+extend-exclude = ["dump", "tools"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["UP017"]  # keep datetime.timezone.utc: type checkers on older Python configs reject datetime.UTC

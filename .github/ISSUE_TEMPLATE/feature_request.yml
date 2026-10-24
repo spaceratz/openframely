@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest something the wall should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this help with?
+      description: >-
+        Describe the everyday situation, e.g. "the kids can't tell
+        whose turn it is to feed the cat".
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: checkboxes
+    id: local
+    attributes:
+      label: Local first
+      options:
+        - label: >-
+            This works without the internet
+            (the wall only talks to Home Assistant on the LAN)
+          required: true

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, initial-scale=1">
+<meta name="description" content="OpenFramely family wall calendar: calendar, chores and home controls served by your own Home Assistant.">
+<meta name="theme-color" content="#0f1115">
+<title>Family Calendar</title>
+<link rel="preload" href="fonts/inter-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-semibold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <aside id="rail">
+    <div id="clockbox">
+      <div id="clock"><span id="clock-hm">--:--</span><span id="clock-ap"></span></div>
+      <div id="date">&nbsp;</div>
+    </div>
+    <div id="weather" class="card">
+      <div id="wx-now">
+        <div id="wx-icon" class="wx-ic"></div>
+        <div>
+          <div id="wx-temp">--&deg;</div>
+          <div id="wx-cond" class="muted"></div>
+        </div>
+        <div id="wx-hilo" class="muted"></div>
+      </div>
+      <div id="wx-days"></div>
+    </div>
+    <div id="upnext" class="card">
+      <h3>Up next</h3>
+      <div id="upnext-list"></div>
+    </div>
+    <button id="rail-settings" aria-label="Settings"><span data-ic="gear"></span></button>
+    <nav id="nav">
+      <button data-view="calendar" class="active"><span class="nav-ic" data-ic="calendar"></span>Calendar</button>
+      <button data-view="chores"><span class="nav-ic" data-ic="check"></span>Chores</button>
+      <button data-view="controls"><span class="nav-ic" data-ic="home"></span>Home</button>
+    </nav>
+  </aside>
+
+  <main>
+    <section class="view active" id="view-calendar">
+      <div class="vhead">
+        <h1 id="cal-title"></h1>
+        <div class="seg">
+          <button id="cal-prev" aria-label="Previous"><span data-ic="left"></span></button>
+          <button id="cal-today">Today</button>
+          <button id="cal-next" aria-label="Next"><span data-ic="right"></span></button>
+        </div>
+        <div class="seg" id="cal-mode">
+          <button data-mode="month" class="active">Month</button>
+          <button data-mode="week">Week</button>
+          <button data-mode="schedule">Agenda</button>
+        </div>
+      </div>
+      <div id="member-filter"></div>
+      <div id="cal-dow"></div>
+      <div id="cal-grid"></div>
+      <div id="cal-week" hidden></div>
+      <div id="cal-schedule" class="slist" hidden></div>
+    </section>
+
+    <section class="view" id="view-day">
+      <div class="vhead">
+        <button id="day-back" class="pill"><span data-ic="left"></span>Back</button>
+        <button id="day-add" class="pill primary"><span data-ic="plus"></span>New event</button>
+        <h1 id="day-title"></h1>
+        <div class="seg">
+          <button id="day-prev" aria-label="Previous day"><span data-ic="left"></span></button>
+          <button id="day-next" aria-label="Next day"><span data-ic="right"></span></button>
+        </div>
+        
+      </div>
+      <div id="day-list"></div>
+    </section>
+
+    <section class="view" id="view-chores">
+      <div class="vhead">
+        <h1>Chores</h1>
+        <div id="chore-week" class="muted big"></div>
+        <div id="chore-total" class="badge"></div>
+      </div>
+      <div id="chore-tabs"></div>
+      <div id="chore-sheet"></div>
+    </section>
+
+    <section class="view" id="view-controls">
+      <div class="vhead"><h1>Home</h1>
+        <div id="home-sum"></div>
+        <button id="all-off" class="pill"><span data-ic="power"></span>All lights off</button>
+      </div>
+      <div id="ctl-wrap">
+        <div class="ctl-col">
+          <h2>Lights <span id="lights-on" class="h2note"></span></h2>
+          <div id="ctl-light-grid"></div>
+        </div>
+        <div class="ctl-col">
+          <h2>Climate</h2>
+          <div id="ctl-ac-list"></div>
+          <h2>Garage</h2>
+          <div id="ctl-garage"></div>
+        </div>
+        <div class="ctl-col">
+          <h2>AC zones</h2>
+          <div id="ctl-zone-list"></div>
+        </div>
+      </div>
+    </section>
+    <section class="view" id="view-settings">
+      <div class="vhead">
+        <h1>Settings</h1>
+        <div id="set-status" class="muted big"></div>
+        <button id="set-close" class="pill primary" style="margin-left:auto">Done</button>
+      </div>
+      <div id="set-wrap">
+        <div class="scol">
+          <div class="scard">
+            <h2>Wi-Fi</h2>
+            <div id="wifi-now" class="big"></div>
+            <button id="wifi-scan" class="pill"><span data-ic="wifi"></span>Find networks</button>
+            <div id="wifi-list"></div>
+          </div>
+          <div class="scard">
+            <h2>Calendar</h2>
+            <label class="srow">Default view
+              <select id="set-default-view">
+                <option value="month">Month</option>
+                <option value="week">Week</option>
+                <option value="schedule">Agenda</option>
+              </select></label>
+            <label class="srow">Time format
+              <select id="set-clock">
+                <option value="12">12 hour (3:45pm)</option>
+                <option value="24">24 hour (15:45)</option>
+              </select></label>
+          </div>
+          <div class="scard">
+            <h2>Device</h2>
+            <div id="device-info" class="kv"></div>
+          </div>
+        </div>
+        <div class="scol">
+          <div class="scard">
+            <h2>Screen</h2>
+            <label class="srow" for="set-bright">Brightness <b id="set-bright-v"></b></label>
+            <input type="range" id="set-bright" min="5" max="255" step="5">
+            <label class="srow"><span>Turn the screen off at night</span><input type="checkbox" id="set-sleep-on" class="toggle"></label>
+            <div class="row2">
+              <div><label for="set-sleep-from">Off at</label><input type="time" id="set-sleep-from"></div>
+              <div><label for="set-sleep-to">On at</label><input type="time" id="set-sleep-to"></div>
+            </div>
+            <div class="muted">Tap the screen to wake it for 2 minutes.</div>
+            <button id="set-sleep-now" class="pill">Turn screen off now</button>
+          </div>
+          <div class="scard">
+            <h2 id="set-tz-h">Time zone</h2>
+            <select id="set-tz" aria-labelledby="set-tz-h"></select>
+          </div>
+          <div class="scard">
+            <h2>Google Calendar</h2>
+            <div id="g-status" class="muted"></div>
+            <input type="text" id="g-url" placeholder="Apps Script feed URL (https://script.google.com/...?key=...)" autocomplete="off">
+            <button id="g-save" class="pill">Save feed URL</button>
+          </div>
+          <div class="sfoot"><span id="set-version" class="muted"></span><button id="set-reload" class="pill">Reload</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="night"></div>
+<div id="offline-banner" role="status" hidden><span data-ic="wifi"></span>Can't reach Home Assistant. Showing the last saved copy, changes will sync when it's back.</div>
+<div id="toast"></div>
+
+<dialog id="ev-dialog">
+  <h2 id="ev-dialog-title">New event</h2>
+  <label for="ev-summary">What</label>
+  <input type="text" id="ev-summary" placeholder="Event title" autocomplete="off">
+  <div class="row">
+    <div><label for="ev-date">Date</label><input type="date" id="ev-date"></div>
+    <div class="ev-time"><label for="ev-start">Start</label><input type="time" id="ev-start"></div>
+    <div class="ev-time"><label for="ev-end">End</label><input type="time" id="ev-end"></div>
+  </div>
+  <div class="row">
+    <label class="srow inline"><input type="checkbox" id="ev-allday" class="toggle"><span>All day</span></label>
+    <div><label for="ev-repeat">Repeats</label>
+      <select id="ev-repeat"><option value="">Never</option><option value="daily">Every day</option><option value="weekly">Every week</option><option value="fortnightly">Every 2 weeks</option></select></div>
+  </div>
+  <label>Who (none = whole family)</label>
+  <div class="who" id="ev-who"></div>
+  <div class="btns">
+    <button id="ev-del" class="pill danger" hidden>Delete</button>
+    <span class="grow"></span>
+    <button id="ev-cancel" class="pill">Cancel</button>
+    <button id="ev-save" class="pill primary">Save</button>
+  </div>
+</dialog>
+
+<dialog id="info-dialog">
+  <div id="info-who"></div>
+  <h2 id="info-title"></h2>
+  <div id="info-when" class="muted big"></div>
+  <div id="info-where" class="muted"></div>
+  <div class="note"><span data-ic="lock"></span>From Google Calendar. Edit it in Google and the wall updates within 30 seconds.</div>
+  <div class="btns"><span class="grow"></span><button id="info-close" class="pill primary">Done</button></div>
+</dialog>
+
+
+
+<dialog id="zone-dialog">
+  <h2 id="zone-title">Zone</h2>
+  <div class="amt-row"><button class="pill zstep" data-d="-25">-25%</button>
+    <input type="range" id="zone-pos" min="0" max="100" step="5">
+    <button class="pill zstep" data-d="25">+25%</button></div>
+  <div class="srow"><span>Damper open</span><b id="zone-pct">50%</b></div>
+  <div class="btns"><span class="grow"></span><button id="zone-cancel" class="pill">Cancel</button><button id="zone-save" class="pill primary">Set</button></div>
+</dialog>
+
+<dialog id="wifi-dialog">
+  <h2 id="wifi-title">Join network</h2>
+  <div id="wifi-pass-row" class="amt-row">
+    <input type="password" id="wifi-pass" placeholder="Password" autocomplete="off">
+    <button id="wifi-show" class="pill">Show</button>
+  </div>
+  <div id="kb"></div>
+  <div class="btns"><span class="grow"></span><button id="wifi-cancel" class="pill">Cancel</button><button id="wifi-join" class="pill primary">Join</button></div>
+</dialog>
+
+<script src="config.js"></script>
+<script src="lib.js"></script>
+<script src="tags.js"></script>
+<script src="icons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

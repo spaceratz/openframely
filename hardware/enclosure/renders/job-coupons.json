@@ -1,0 +1,6 @@
+{
+  "input": "STEP/coupons.step",
+  "mode": "view",
+  "outputs": [ { "path": "renders/coupons.png", "camera": { "direction": [0.5, -0.8, 0.9], "up": [0, 0, 1] } } ],
+  "output": { "viewLabels": false, "padding": 0.06, "sizeProfile": "diagnostic" }
+}

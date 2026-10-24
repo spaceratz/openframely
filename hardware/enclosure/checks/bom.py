@@ -1,0 +1,165 @@
+"""Print list + fastener BOM, computed from the model (so it stays right for every preset).
+
+Writes BOM.md. Run: uvx ... python checks/bom.py
+"""
+
+from __future__ import annotations
+
+import json
+import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+import _parts  # noqa: E402
+import params as P  # noqa: E402
+
+STD_M3 = [6, 8, 10, 12, 14, 16, 20]
+STD_M35 = [20, 25, 30, 32, 35, 40]
+
+
+def next_std(n: float, sizes: list[int]) -> int:
+    return next(s for s in sizes if s >= n)
+
+
+def stl_size(path: pathlib.Path) -> tuple[float, float, float]:
+    """Bounding box of a binary or ASCII STL, without extra dependencies."""
+    import struct
+
+    data = path.read_bytes()
+    pts: list[tuple[float, float, float]] = []
+    if data[:5] == b"solid" and b"facet" in data[:400]:
+        for line in data.decode(errors="ignore").splitlines():
+            t = line.split()
+            if t and t[0] == "vertex":
+                pts.append((float(t[1]), float(t[2]), float(t[3])))
+    else:
+        n = struct.unpack_from("<I", data, 80)[0]
+        for i in range(n):
+            v = struct.unpack_from("<12f", data, 84 + i * 50)
+            pts += [v[3:6], v[6:9], v[9:12]]
+    lo = [min(c) for c in zip(*pts, strict=True)]
+    hi = [max(c) for c in zip(*pts, strict=True)]
+    return hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]
+
+
+BEDS = {
+    "Bambu X1/P1/A1 (256 x 256)": (256, 256),
+    "Prusa MK4 (250 x 210)": (250, 210),
+    "Prusa Core One (250 x 220)": (250, 220),
+    "Ender 3 (220 x 220)": (220, 220),
+    "Prusa XL (360 x 360)": (360, 360),
+}
+
+
+def bed_lines(rows: list) -> list[str]:
+    """Which beds take every part (a part may be turned 90 degrees on the bed)."""
+    out = ["| Printer bed | Fits every part? | Too big |", "|---|---|---|"]
+    for bed, (bx, by) in BEDS.items():
+        bad = []
+        for f, _q, size, *_ in rows:
+            sx, sy, _sz = (float(v) for v in size.split(" x "))
+            if not ((sx <= bx and sy <= by) or (sy <= bx and sx <= by)):
+                bad.append(f"`{f.split('/')[-1]}` ({sx:.0f} x {sy:.0f})")
+        out.append(f"| {bed} | {'yes' if not bad else 'no'} | {', '.join(bad) or '-'} |")
+    return out
+
+
+def dfam(name: str) -> dict:
+    f = ROOT / "checks/out" / f"dfam-{name}.json"
+    try:
+        return json.loads(f.read_text())
+    except (OSError, ValueError):  # missing or half-written report: the BOM shows "?" for it
+        return {}
+
+
+def main() -> int:
+    from cadgen import read_step
+
+    rows = []
+    for name, qty, how in [
+        ("frame_left", 1, "face-down (front on the bed), no supports"),
+        ("frame_right", 1, "face-down (front on the bed), no supports"),
+        *([] if P.PLATE_SPLIT else [("back_plate", 1, "flat, wall side on the bed")]),
+        ("gpo_saddle", 1, "cover-down, no supports" if not P.GPO_OPEN else "top-down, build-plate supports under the flange"),
+        ("clamp_bars", 1, "one plate: 6 snap-in clamps, 2 snap-in joiners, 2 lip splices, all flat"),
+        ("coupons", 1, "PRINT FIRST: 7 fit-test pieces (corner, hook, latch, snap), one plate"),
+        *(
+            [
+                ("back_plate_left", 1, "instead of back_plate: left half, flat"),
+                ("back_plate_right", 1, "instead of back_plate: right half, flat"),
+                ("plate_splice", 1, "glue into the front-face recess across the cut"),
+            ]
+            if P.PLATE_SPLIT
+            else []
+        ),
+    ]:
+        if name in ("back_plate_left", "back_plate_right", "plate_splice"):  # pieces of the split plate model
+
+            def _which(sol, nm=name):
+                bb = sol.bounding_box()
+                kind = (
+                    "plate_splice"
+                    if bb.size.Z < 2 and bb.size.X < 25
+                    else ("back_plate_left" if bb.center().X < P.PLATE_SPLIT_X else "back_plate_right")
+                )
+                return kind == nm
+
+            s = next(x for x in read_step(str(ROOT / "STEP" / "back_plate_split.step")).solids() if _which(x))
+        else:
+            s = read_step(str(ROOT / "STEP" / f"{name}.step"))
+        sx, sy, sz = stl_size(ROOT / "STL" / f"{name}.stl")  # as printed, not as installed
+        d = dfam(name)
+        sup = d.get("overhangs", {}).get("down_facing_area_below_limit_pct", "?")
+        grams = s.volume / 1000 * 1.27  # PETG 1.27 g/cm3, solid; ~60% of this at 3 walls / 20% infill
+        rows.append((f"STL/{name}.stl", qty, f"{sx:.0f} x {sy:.0f} x {sz:.0f}", how, sup, grams))
+
+    z_cover, z_top = _parts.saddle_levels()
+    stack = z_top - P.GPO_EAR_Z - P.GPO_HEAD_H  # saddle material under the GPO screw head
+    gpo_len = next_std(stack + 20.0, STD_M35)  # + ~20 mm into the box lug (what the faceplate screws had)
+    lines = [
+        f"# Print list and fasteners ({P.PRESET}, {P.GPO_PRESET})",
+        "",
+        f"Overall {P.OUTER_W:.0f} x {P.OUTER_H:.0f} mm, {P.DEPTH:.1f} mm off the wall. Generated by `checks/bom.py`.",
+        "",
+        "## Prints (PETG or ASA, 0.2 mm layers, 3 walls, 20% gyroid)",
+        "",
+        "| File | Qty | Size on the bed (mm) | Orientation | Support area | Filament |",
+        "|---|---|---|---|---|---|",
+    ]
+    lines += [f"| `{f}` | {q} | {sz} | {how} | {sup}% | ~{g * 0.6:.0f} g |" for f, q, sz, how, sup, g in rows]
+    total = sum(r[5] for r in rows) * 0.6
+    lines += [
+        "",
+        f"About **{total:.0f} g** of filament in total (~A${total / 1000 * 35:.0f} at A$35/kg PETG), and roughly "
+        f"**{total / 1.27 * 1000 / 9.0 / 3600:.0f} h** of printing at ~9 mm³/s average (0.4 mm nozzle, 0.2 mm layers; "
+        "a fast CoreXY printer takes about half that). Every STL is already in its print orientation.",
+        "",
+        "## Which printers can make it",
+        "",
+        *bed_lines(rows),
+        "",
+        "## Fasteners and hardware",
+        "",
+        "Only the wall and the board are screwed. The frame clips onto the back plate (top hooks, bottom",
+        "snap latches) and the clamp bars and joiners snap through the frame walls.",
+        "",
+        "| Qty | Part | Where |",
+        "|---|---|---|",
+        f"| 2 | M3.5 x {gpo_len} mm countersunk (AU flush-box screw) | GPO saddle to the wall box, replacing the faceplate screws |",
+        "| 4 | M3 x 6 mm thread-forming screw (or M2.5 x 6) | board to the standoffs (check the board's hole size) |",
+        "| 2 | 8 g x 25 mm pan head + wall plugs | keyholes in the back plate (for walls without a GPO) |",
+        f"| 1 | 5 V lead, {P.CABLE_OD:.0f} mm OD max, ending in a right-angle USB-C | in-wall supply to the board |",
+        "| ~1 m | 0.8 mm foam tape, 8 mm wide | between the clamp bars and the panel |",
+        *(["| 1 | AM312 mini PIR module (10 mm dome) | bottom-wall lens hole, wired to the board's PIR header |"] if P.PIR else []),
+        "| a few drops | CA glue or 2K epoxy | frame halves at the seam, lip splices |",
+        "",
+    ]
+    (ROOT / "BOM.md").write_text("\n".join(lines))
+    print("\n".join(lines))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,10 @@
+{
+  "input": "STEP/assembly.step",
+  "mode": "view",
+  "outputs": [
+    { "path": "renders/front.png", "camera": { "direction": [0.45, -0.6, 1.0] } },
+    { "path": "renders/back.png", "camera": { "direction": [-0.45, 0.55, -1.0] } },
+    { "path": "renders/side.png", "camera": { "direction": [1, -0.12, 0.08] } }
+  ],
+  "output": { "viewLabels": false, "padding": 0.06, "sizeProfile": "diagnostic" }
+}
